@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/seg2shp" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
