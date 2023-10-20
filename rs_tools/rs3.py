@@ -125,6 +125,7 @@ class LightImage():
         self.projection = osr.SpatialReference()
         self.projection.ImportFromWkt(self.ds.GetProjectionRef())
         
+        
     def show_image_rgb(self, bands=[0,1,2]):
         """
         Display rgb image
@@ -147,13 +148,14 @@ class LightImage():
         plt.show()
         
         
-    def get_img_array(self):
+    def get_img_rgb_array(self, bands=[0,1,2]):
         
-        arr = np.zeros((self.nrow, self.ncol, self.nband), dtype=self.dtype)
+        arr = np.zeros((self.nrow, self.ncol, 3), dtype=self.dtype)
 
-        for i in range(self.nband):
+        for i in bands:
             band = self.ds.GetRasterBand(i + 1)
             arr[:,:,i] = band.ReadAsArray(0, 0, self.ncol, self.nrow)
+            
         return arr
 
     def get_pixel(self, x, y, band=0):

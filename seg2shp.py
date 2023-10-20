@@ -240,13 +240,18 @@ class seg2shp:
         # Get file name for selected layer
         fn = selectedLayer.dataProvider().dataSourceUri()
         
-        print("Reading raster layer..")
-        lightImage = LightImage(fn)
-        img_arr = lightImage.get_img_array()
+        resize=1024
         
-        img_arr_resize = cv2.resize(img_arr, (1024,1024), interpolation=cv2.INTER_NEAREST)
-        scale_row = lightImage.nrow/1024
-        scale_col = lightImage.ncol/1024
+        if self.img_arr is None:
+            if self.img_fn != selectedLayer_name:
+                print("Reading raster layer..")
+                self.lightImage = LightImage(fn)
+                img_arr = self.lightImage.get_img_rgb_array()
+                self.img_arr = cv2.resize(img_arr, (resize,resize), interpolation=cv2.INTER_NEAREST)
+                self.img_fn = selectedLayer_name
+        
+        scale_row = self.lightImage.nrow/resize
+        scale_col = self.lightImage.ncol/resize
         # img_arr_resize_rgb = img_arr_resize[:,:,::-1]
         # temp_img_fn = f'{self.plugin_dir}/temp.jpg'
         
@@ -257,7 +262,7 @@ class seg2shp:
         # img = img_arr[::scale_factor,::scale_factor,:]
     
         print("Image shape:")
-        print(np.shape(img_arr_resize))
+        print(np.shape(self.img_arr))
         
         # Get point prompts if exists
         point_prompt = False
@@ -297,7 +302,7 @@ class seg2shp:
             point_prompt = True
             print(prompt_str)
             prompt_arr = np.array(prompt_str, dtype=np.float64)
-            x,y = world2Pixel(lightImage.geotransform, prompt_arr[0], prompt_arr[1])
+            x,y = world2Pixel(self.lightImage.geotransform, prompt_arr[0], prompt_arr[1])
             input_point = np.array( [np.array([x,y]) / np.array([scale_col, scale_row])] , dtype=np.int32)
             print('Input point pixel: ',input_point)
         elif len(prompt_str)==4:
@@ -306,8 +311,8 @@ class seg2shp:
             box_prompt = True
             prompt_arr = np.array(prompt_str, dtype=np.float64)
             print('Input box coords: ',prompt_str)
-            x1,y1 = world2Pixel(lightImage.geotransform, prompt_arr[0], prompt_arr[1])
-            x2,y2 = world2Pixel(lightImage.geotransform, prompt_arr[2], prompt_arr[3])
+            x1,y1 = world2Pixel(self.lightImage.geotransform, prompt_arr[0], prompt_arr[1])
+            x2,y2 = world2Pixel(self.lightImage.geotransform, prompt_arr[2], prompt_arr[3])
             input_box = np.array( np.array([x1,y1,x2,y2]) / np.array([scale_col, scale_row, scale_col, scale_row]) , dtype=np.int32)
             print('Input box pixel: ',input_box)
         else:
@@ -328,7 +333,7 @@ class seg2shp:
             # Build SAM mask generator
             if point_prompt:
                 predictor = SamPredictor(self.sam)
-                predictor.set_image(img_arr_resize)
+                predictor.set_image(self.img_arr)
                 masks = []
                 # for x,y in input_point:
                 mask, _, _ = predictor.predict(
@@ -339,7 +344,7 @@ class seg2shp:
                 masks.append({'segmentation':mask[0,:,:]})
             elif box_prompt:
                 predictor = SamPredictor(self.sam)
-                predictor.set_image(img_arr_resize)
+                predictor.set_image(self.img_arr)
                 masks = []
                 mask, _, _ = predictor.predict(
                     point_coords = None,
@@ -360,9 +365,9 @@ class seg2shp:
                 crop_n_points_downscale_factor=2,
                 min_mask_region_area=100,  # Requires open-cv to run post-processing
                 )
-                masks = mask_generator.generate(img_arr_resize)
+                masks = mask_generator.generate(self.img_arr)
 
-                mask_arr = np.zeros((np.shape(img_arr_resize)[0],np.shape(img_arr_resize)[1]))
+                mask_arr = np.zeros((np.shape(self.img_arr)[0],np.shape(self.img_arr)[1]))
                 for mask in masks:
                     mask_arr += mask['segmentation']
 
@@ -410,21 +415,22 @@ class seg2shp:
 
         polygon_list=[]
         min_obj = self.dlg.spinBox_minimum_object_size.value()
+        max_obj = self.dlg.spinBox_maximum_object_size.value()
         # kernel_size = int(np.sqrt(min_obj)/10)
         # kernel = np.ones((kernel_size,kernel_size), np.uint8)
         for mask in masks:
             # mask = cv2.morphologyEx(np.array(mask['segmentation'], dtype=np.uint8), cv2.MORPH_OPEN, kernel)
             mask_ = mask['segmentation']
-            if np.sum(mask_) > min_obj:
-                # print("np.sum is",np.sum(mask_))
-                polygons = polygonize(mask_, min_obj, simplify_tolerance=self.dlg.doubleSpinBox_simplify_tolerance.value())
-                for polygon_ in polygons:
-                    xy = np.array(polygon_.exterior.xy).transpose() * np.array([scale_col, scale_row])
-                    x = xy[:,0]
-                    y = -xy[:,1]
-                    transformed_coords = (np.array([x,y])*lightImage.geotransform[1] + 
-                                          np.array([[lightImage.geotransform[0]],[lightImage.geotransform[3]]])).transpose()
-                    polygon_list += [sPolygon(transformed_coords)]
+            polygons = polygonize(mask_, min_obj, simplify_tolerance=self.dlg.doubleSpinBox_simplify_tolerance.value())
+            for polygon_ in polygons:
+                xy = np.array(polygon_.exterior.xy).transpose() * np.array([scale_col, scale_row])
+                x = xy[:,0]
+                y = -xy[:,1]
+                transformed_coords = (np.array([x,y])*self.lightImage.geotransform[1] + 
+                                        np.array([[self.lightImage.geotransform[0]],[self.lightImage.geotransform[3]]])).transpose()
+                polygon_new = sPolygon(transformed_coords)
+                if polygon_new.area > min_obj and polygon_new.area < max_obj:
+                    polygon_list.append(polygon_new)
         
         if self.dlg.checkBox_update_layer.isChecked():
             polygons = load_polygons(self.dlg.lineEdit_output_layer.text())
@@ -432,7 +438,7 @@ class seg2shp:
             print('Updating Polygons')
 
         print(f'Saving polygons to {self.dlg.lineEdit_output_layer.text()}..')
-        save_polygons(self.dlg.lineEdit_output_layer.text(), polygon_list, lightImage.projection.ExportToProj4())
+        save_polygons(self.dlg.lineEdit_output_layer.text(), polygon_list, self.lightImage.projection.ExportToProj4())
         
         
         # os.remove(temp_img_fn)
@@ -443,9 +449,11 @@ class seg2shp:
     def _reload_layer(self):
         parcel_fn = self.dlg.lineEdit_output_layer.text()
         parcel_layer = QgsVectorLayer(parcel_fn, "parcel_layer", "ogr")
-        try:
-            QgsProject.instance().removeMapLayers(parcel_layer)
-        except:
+        pb = QgsProject.instance().mapLayersByName('parcel_layer')
+        if pb:
+            QgsProject.instance().removeMapLayers([pb[0].id()])
+            QgsProject.instance().addMapLayer(parcel_layer)
+        else:
             QgsProject.instance().addMapLayer(parcel_layer)
         
         r=np.random.randint(0,255)
@@ -485,6 +493,9 @@ class seg2shp:
         self.iface.mapCanvas().setMapTool(self.box_tool)
         self.box_tool.extentChanged.connect(self._writeLineWidget)
         
+    def automatic(self):
+        self.dlg.lineEdit_coords.setText('')
+        
     def set_fast_sam_groupBox(self):
         self.dlg.groupBox_sam.setChecked(False)
         self.dlg.groupBox_fast_sam.setChecked(True)
@@ -503,6 +514,7 @@ class seg2shp:
             self.dlg = seg2shpDialog()
 
             # prompt processing
+            self.dlg.pushButton_automatic.clicked.connect(self.automatic)
             self.dlg.pushButton_draw_point.clicked.connect(self.draw_point)
             self.dlg.pushButton_draw_box.clicked.connect(self.draw_box)
             
@@ -524,6 +536,9 @@ class seg2shp:
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
             if cuda.is_available():
                 self.sam.to(device=device)
+            
+            self.img_arr = None
+            self.img_fn = None
 
         # show the dialog
         self.dlg.show()
