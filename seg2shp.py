@@ -226,9 +226,6 @@ class seg2shp:
         except:
             pass
         
-        self.dlg.hide()
-        self.dlg.show()
-        
         
     def model_check(self):
         
@@ -249,7 +246,7 @@ class seg2shp:
                 self.sam.to(device=self.device)
             
             elif self.dlg.groupBox_fast_sam.isChecked():
-                print("Building Fast SAM Mask generator")
+                print("Building Fast SAM Mask generator")             
                 self.model = 'fastsam'
                 self.sam = FastSAM(f'{self.plugin_dir}/checkpoint/FastSAM-x.pt')
             
@@ -365,6 +362,7 @@ class seg2shp:
                     mask_arr += mask['segmentation']
 
         elif self.dlg.groupBox_fast_sam.isChecked():
+
             # FASTSam Mask generator
             self.model_check()
             print('Generating Masks..')
@@ -425,7 +423,7 @@ class seg2shp:
         
         os.remove(temp_img_fn)
         
-        self.dlg.hide()
+        # self.dlg.hide()
         self._reload_layer()
         
     
@@ -488,8 +486,6 @@ class seg2shp:
             self.dlg.groupBox_fast_sam.setChecked(False)
             QMessageBox.warning(None, "Warning", "FastSAM is not available!")
             
-
-        
     def set_sam_groupBox(self):
         self.dlg.groupBox_sam.setChecked(True)
         self.dlg.groupBox_fast_sam.setChecked(False)

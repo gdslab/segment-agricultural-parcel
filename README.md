@@ -122,7 +122,9 @@ pip3 install git+https://github.com/openai/CLIP.git
 
 # How to Run
 
-![gui](gui.png)
+<p align="center">
+    <img src="gui.png" width="500"/>
+</p>
 
 ## Automatic Mask Generator
 1. Select input layer.
