@@ -27,7 +27,7 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 from qgis._gui import QgsMapMouseEvent
 from qgis.core import QgsProject, QgsVectorLayer, QgsFillSymbol, QgsSingleSymbolRenderer, QgsPointXY, QgsRectangle
-from PyQt5.QtWidgets import QAction, QFileDialog
+from PyQt5.QtWidgets import QAction, QFileDialog, QMessageBox
 from qgis.gui import QgsMapToolEmitPoint, QgsMapToolExtent
 
 # Initialize Qt resources from file resources.py
@@ -46,11 +46,6 @@ from torch import cuda
 from torch.backends import mps
 import cv2
 import time
-
-try:
-    from .FastSAM.fastsam import FastSAM, FastSAMPrompt
-except:
-    print('FastSAM not available')
 
 
 class BoxTool(QgsMapToolExtent):
@@ -231,10 +226,33 @@ class seg2shp:
         except:
             pass
         
+        self.dlg.hide()
         self.dlg.show()
         
         
+    def model_check(self):
         
+        if self.dlg.groupBox_sam.isChecked():
+            model_selected = 'sam'
+        elif self.dlg.groupBox_fast_sam.isChecked():
+            model_selected = 'fastsam'
+        
+        if (self.model is None) or (model_selected != self.model):
+        
+            if self.dlg.groupBox_sam.isChecked():
+                print("Building SAM Mask Generator..")
+                # SAM model settings
+                sam_checkpoint = f"{self.plugin_dir}/checkpoint/sam_vit_h_4b8939.pth"
+                model_type = "vit_h"
+                self.model = 'sam'
+                self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+                self.sam.to(device=self.device)
+            
+            elif self.dlg.groupBox_fast_sam.isChecked():
+                print("Building Fast SAM Mask generator")
+                self.model = 'fastsam'
+                self.sam = FastSAM(f'{self.plugin_dir}/checkpoint/FastSAM-x.pt')
+            
     def do_something(self):
         
         layers = QgsProject.instance().layerTreeRoot().children()
@@ -274,33 +292,6 @@ class seg2shp:
         # Get point prompts if exists
         point_prompt = False
         box_prompt = False
-
-        '''
-        # try loading point layers
-        selectedLayerIndex_point_prompt = self.dlg.comboBox_point_prompt.currentIndex()
-        selectedLayer_point_prompt = layers[selectedLayerIndex_point_prompt].layer()
-        fn_point_prompt = selectedLayer_point_prompt.dataProvider().dataSourceUri()
-        prompt = ogr.Open(fn_point_prompt)
-        layer = prompt.GetLayer()
-        input_point = []
-        # input_label = []
-        for feature in layer:
-            # Get the geometry of the feature
-            geometry = feature.GetGeometryRef()
-            # label = feature.GetField('label')
-            # Check if the geometry is a point
-            if geometry.GetGeometryType() == ogr.wkbPoint:
-                # Get the coordinates of the point
-                x = geometry.GetX()
-                y = geometry.GetY()
-                input_point.append([x,y])
-                # input_label.append(label)
-
-        input_point = np.array(input_point)
-        # input_label = np.array(input_label)
-        input_label = np.ones(np.shape(input_point)[0])
-        point_prompt = True
-        '''
             
         prompt_str = self.dlg.lineEdit_coords.text().split(',')
         # check if we have point input
@@ -327,10 +318,11 @@ class seg2shp:
     
     
         seg_start_time = time.time()
+        
         if self.dlg.groupBox_sam.isChecked():
-            
         # SAM mask generator
-            print('Generating masks..')
+            self.model_check()
+            print('Generating Masks..')
             # Build SAM mask generator
             if point_prompt:
                 predictor = SamPredictor(self.sam)
@@ -372,22 +364,14 @@ class seg2shp:
                 for mask in masks:
                     mask_arr += mask['segmentation']
 
-
         elif self.dlg.groupBox_fast_sam.isChecked():
             # FASTSam Mask generator
-            print('Using FastSAM Mask generator..')
-            start_time = time.time()
-            model = FastSAM(f'{self.plugin_dir}/checkpoint/FastSAM-x.pt')
+            self.model_check()
+            print('Generating Masks..')
             IMAGE_PATH = temp_img_fn
-            if cuda.is_available():
-                print('Using CUDA..')
-                DEVICE = 'cuda'
-            else:
-                print('Using CPU..')
-                DEVICE = 'cpu'
-            everything_results = model(IMAGE_PATH, device=DEVICE, retina_masks=True, imgsz=1024, 
+            everything_results = self.sam(IMAGE_PATH, device=self.device, retina_masks=True, imgsz=1024, 
                                     conf=self.dlg.doubleSpinBox_conf_thr.value(), iou=self.dlg.doubleSpinBox_iou_thr_fast.value(),)
-            prompt_process = FastSAMPrompt(IMAGE_PATH, everything_results, device=DEVICE)
+            prompt_process = FastSAMPrompt(IMAGE_PATH, everything_results, device=self.device)
 
             if box_prompt:
                 # bbox default shape [0,0,0,0] -> [x1,y1,x2,y2]
@@ -402,7 +386,6 @@ class seg2shp:
                 masks_torch = prompt_process.everything_prompt()
                 masks_arr = masks_torch.cpu().numpy()
             
-            print('Number of masks: ', np.shape(masks_arr)[0])
             masks=[]
             for i in range(np.shape(masks_arr)[0]):
                 masks.append({'segmentation':masks_arr[i,:,:]})
@@ -497,8 +480,15 @@ class seg2shp:
         self.dlg.lineEdit_coords.setText('')
         
     def set_fast_sam_groupBox(self):
-        self.dlg.groupBox_sam.setChecked(False)
-        self.dlg.groupBox_fast_sam.setChecked(True)
+        try:
+            from .FastSAM.fastsam import FastSAM, FastSAMPrompt
+            self.dlg.groupBox_sam.setChecked(False)
+            self.dlg.groupBox_fast_sam.setChecked(True)
+        except:
+            self.dlg.groupBox_fast_sam.setChecked(False)
+            QMessageBox.warning(None, "Warning", "FastSAM is not available!")
+            
+
         
     def set_sam_groupBox(self):
         self.dlg.groupBox_sam.setChecked(True)
@@ -528,24 +518,16 @@ class seg2shp:
             self.dlg.groupBox_fast_sam.clicked.connect(self.set_fast_sam_groupBox)
             self.dlg.groupBox_sam.clicked.connect(self.set_sam_groupBox)
             
-            print("Building Automatic Generator..")
-            
-            # SAM model settings
-            sam_checkpoint = f"{self.plugin_dir}/checkpoint/sam_vit_h_4b8939.pth"
-            model_type = "vit_h"
-            self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-            if cuda.is_available():
-                self.sam.to(device='cuda')
-                print('CUDA detected')
-            # elif mps.is_available():
-            #     self.sam.to(device='mps')
-            #     print('mps loaded')
-            else:
-                self.sam.to(device='cpu')
-                print('Using CPU..')
-            
             self.img_arr = None
             self.img_fn = None
+            self.model = None
+            
+            if cuda.is_available():
+                self.device = 'cuda'
+            # elif mps.is_available():
+            #     self.device = 'mps'
+            else:
+                self.device = 'cpu'
 
         # show the dialog
         self.dlg.show()
