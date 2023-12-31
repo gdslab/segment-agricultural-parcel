@@ -46,7 +46,11 @@ from torch import cuda
 from torch.backends import mps
 import cv2
 import time
-# from fastsam import FastSAM, FastSAMPrompt
+
+try:
+    from .FastSAM.fastsam import FastSAM, FastSAMPrompt
+except:
+    print('FastSAM not available')
 
 
 class BoxTool(QgsMapToolExtent):
@@ -227,6 +231,9 @@ class seg2shp:
         except:
             pass
         
+        self.dlg.show()
+        
+        
         
     def do_something(self):
         
@@ -248,19 +255,18 @@ class seg2shp:
                 print("Reading raster layer..")
                 self.lightImage = LightImage(fn)
                 img_arr = self.lightImage.get_img_rgb_array()
+                # img_arr_float32 = np.array(img_arr, dtype=np.float32)
                 self.img_arr = cv2.resize(img_arr, (resize,resize), interpolation=cv2.INTER_NEAREST)
                 self.img_fn = selectedLayer_name
         
         scale_row = self.lightImage.nrow/resize
         scale_col = self.lightImage.ncol/resize
-        # img_arr_resize_rgb = img_arr_resize[:,:,::-1]
-        # temp_img_fn = f'{self.plugin_dir}/temp.jpg'
         
-        # cv2.imwrite(temp_img_fn, img_arr_resize_rgb)
+        img_arr_resize_rgb = self.img_arr[:,:,::-1]
+        temp_img_fn = f'{self.plugin_dir}/temp.jpg'
+        
+        cv2.imwrite(temp_img_fn, img_arr_resize_rgb)
         # del img_arr
-        
-        # scale_factor = 10
-        # img = img_arr[::scale_factor,::scale_factor,:]
     
         print("Image shape:")
         print(np.shape(self.img_arr))
@@ -319,17 +325,11 @@ class seg2shp:
         else:
             print("No prompts detected")
     
+    
+        seg_start_time = time.time()
         if self.dlg.groupBox_sam.isChecked():
-        # SAM mask generator
-            # print("Building Automatic Generator..")
-            # # SAM model settings
-            # sam_checkpoint = f"{self.plugin_dir}/checkpoint/sam_vit_h_4b8939.pth"
-            # model_type = "vit_h"
-            # device = "cuda"
-            # sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-            # if cuda.is_available():
-            #     sam.to(device=device)
             
+        # SAM mask generator
             print('Generating masks..')
             # Build SAM mask generator
             if point_prompt:
@@ -343,6 +343,7 @@ class seg2shp:
                     multimask_output=False,
                 )
                 masks.append({'segmentation':mask[0,:,:]})
+                
             elif box_prompt:
                 predictor = SamPredictor(self.sam)
                 predictor.set_image(self.img_arr)
@@ -354,7 +355,6 @@ class seg2shp:
                     multimask_output=False,
                 )
                 masks.append({'segmentation':mask[0,:,:]})
-                
                 
             else:
                 mask_generator = SamAutomaticMaskGenerator(
@@ -372,7 +372,7 @@ class seg2shp:
                 for mask in masks:
                     mask_arr += mask['segmentation']
 
-        '''
+
         elif self.dlg.groupBox_fast_sam.isChecked():
             # FASTSam Mask generator
             print('Using FastSAM Mask generator..')
@@ -395,20 +395,19 @@ class seg2shp:
                 masks_arr = masks_torch
             elif point_prompt:
                 # point prompt
-                masks_torch = prompt_process.point_prompt(points=[input_point], pointlabel=[1])
+                masks_torch = prompt_process.point_prompt(points=input_point, pointlabel=[1])
                 masks_arr = masks_torch
             else:
                 # everything prompt
                 masks_torch = prompt_process.everything_prompt()
                 masks_arr = masks_torch.cpu().numpy()
             
-            
             print('Number of masks: ', np.shape(masks_arr)[0])
             masks=[]
             for i in range(np.shape(masks_arr)[0]):
                 masks.append({'segmentation':masks_arr[i,:,:]})
-            print('FastSAM took: ', time.time()-start_time, 'seconds')
-        '''
+
+        print('Segmentation took: ', f"{(time.time()-seg_start_time):.2f} seconds")
 
         # Save polygons
         print('Polygonizing..')
@@ -441,9 +440,9 @@ class seg2shp:
         print(f'Saving polygons to {self.dlg.lineEdit_output_layer.text()}..')
         save_polygons(self.dlg.lineEdit_output_layer.text(), polygon_list, self.lightImage.projection.ExportToProj4())
         
+        os.remove(temp_img_fn)
         
-        # os.remove(temp_img_fn)
-        
+        self.dlg.hide()
         self._reload_layer()
         
     
@@ -537,10 +536,13 @@ class seg2shp:
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
             if cuda.is_available():
                 self.sam.to(device='cuda')
-                print('cuda loaded')
-            elif mps.is_available():
-                self.sam.to(device='mps')
-                print('mps loaded')
+                print('CUDA detected')
+            # elif mps.is_available():
+            #     self.sam.to(device='mps')
+            #     print('mps loaded')
+            else:
+                self.sam.to(device='cpu')
+                print('Using CPU..')
             
             self.img_arr = None
             self.img_fn = None
