@@ -29,8 +29,14 @@ Download SAM checkpoint file
 mkdir checkpoint & cd checkpoint
 ```
 
+```windows```
 ```bash
 wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth -o sam_vit_h_4b8939.pth
+```
+
+```linux or mac```
+```bash
+wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 ```
 
 (Optional) Download fast sam checkpoint file

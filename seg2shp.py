@@ -43,6 +43,7 @@ from .rs_tools import LightImage, polygonize, save_polygons, load_polygons, worl
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry, SamPredictor
 from shapely.geometry import Polygon as sPolygon
 from torch import cuda
+from torch.backends import mps
 import cv2
 import time
 # from fastsam import FastSAM, FastSAMPrompt
@@ -529,13 +530,17 @@ class seg2shp:
             self.dlg.groupBox_sam.clicked.connect(self.set_sam_groupBox)
             
             print("Building Automatic Generator..")
+            
             # SAM model settings
             sam_checkpoint = f"{self.plugin_dir}/checkpoint/sam_vit_h_4b8939.pth"
             model_type = "vit_h"
-            device = "cuda"
             self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
             if cuda.is_available():
-                self.sam.to(device=device)
+                self.sam.to(device='cuda')
+                print('cuda loaded')
+            elif mps.is_available():
+                self.sam.to(device='mps')
+                print('mps loaded')
             
             self.img_arr = None
             self.img_fn = None
