@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>587</width>
-    <height>960</height>
+    <height>1099</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>820</y>
+     <y>960</y>
      <width>111</width>
      <height>16</height>
     </rect>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>80</y>
+     <y>160</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -85,7 +85,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>110</y>
+     <y>190</y>
      <width>541</width>
      <height>32</height>
     </rect>
@@ -97,7 +97,10 @@
        <string>Automatic</string>
       </property>
       <property name="checkable">
-       <bool>false</bool>
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
       <property name="default">
        <bool>true</bool>
@@ -112,12 +115,18 @@
       <property name="text">
        <string>Draw Point</string>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item>
      <widget class="QPushButton" name="pushButton_draw_box">
       <property name="text">
        <string>Draw Box</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -127,7 +136,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>840</y>
+     <y>980</y>
      <width>541</width>
      <height>31</height>
     </rect>
@@ -149,7 +158,7 @@
    <property name="geometry">
     <rect>
      <x>300</x>
-     <y>900</y>
+     <y>1040</y>
      <width>264</width>
      <height>32</height>
     </rect>
@@ -178,9 +187,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>200</y>
+     <y>280</y>
      <width>541</width>
-     <height>161</height>
+     <height>221</height>
     </rect>
    </property>
    <property name="title">
@@ -196,7 +205,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>120</y>
+      <y>180</y>
       <width>511</width>
       <height>22</height>
      </rect>
@@ -209,7 +218,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>40</y>
+      <y>100</y>
       <width>161</width>
       <height>16</height>
      </rect>
@@ -222,7 +231,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>100</y>
+      <y>160</y>
       <width>161</width>
       <height>16</height>
      </rect>
@@ -235,7 +244,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>120</y>
       <width>511</width>
       <height>22</height>
      </rect>
@@ -244,12 +253,44 @@
      <double>0.860000000000000</double>
     </property>
    </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>36</y>
+      <width>161</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Points per side</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="doubleSpinBox_points_per_side">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>511</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
+    <property name="maximum">
+     <double>1000.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>32.000000000000000</double>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_fast_sam">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>370</y>
+     <y>510</y>
      <width>541</width>
      <height>161</height>
     </rect>
@@ -326,7 +367,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>550</y>
+     <y>690</y>
      <width>541</width>
      <height>241</height>
     </rect>
@@ -432,7 +473,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>150</y>
+     <y>230</y>
      <width>541</width>
      <height>29</height>
     </rect>
@@ -442,13 +483,86 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>80</y>
+     <y>160</y>
      <width>141</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
     <string>Update Layer</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_resize_1024">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>110</y>
+     <width>175</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>1024</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="default">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>80</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Image Resize</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_resize_512">
+   <property name="geometry">
+    <rect>
+     <x>198</x>
+     <y>110</y>
+     <width>175</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>512</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_resize_256">
+   <property name="geometry">
+    <rect>
+     <x>16</x>
+     <y>110</y>
+     <width>175</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>256</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="default">
+    <bool>false</bool>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

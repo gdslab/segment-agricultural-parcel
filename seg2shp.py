@@ -229,6 +229,15 @@ class seg2shp:
         
     def model_check(self):
         
+        if cuda.is_available():
+            self.device = 'cuda'
+            print('Using CUDA')
+        # elif mps.is_available():
+        #     self.device = 'mps'
+        else:
+            self.device = 'cpu'
+            print('Using CPU')
+        
         if self.dlg.groupBox_sam.isChecked():
             model_selected = 'sam'
         elif self.dlg.groupBox_fast_sam.isChecked():
@@ -263,19 +272,26 @@ class seg2shp:
         # Get file name for selected layer
         fn = selectedLayer.dataProvider().dataSourceUri()
         
-        resize=1024
+        self.get_resize()
+        resize_height=self.resize
+        resize_width=self.resize
+        print(f'Resizing into {resize_height,resize_width}')       
+
+        # if self.img_arr is None:
+        # if self.img_fn != selectedLayer_name:
+        print("Reading raster layer..")
+        self.lightImage = LightImage(fn)
+        img_arr = self.lightImage.get_img_rgb_array()
         
-        if self.img_arr is None:
-            if self.img_fn != selectedLayer_name:
-                print("Reading raster layer..")
-                self.lightImage = LightImage(fn)
-                img_arr = self.lightImage.get_img_rgb_array()
-                # img_arr_float32 = np.array(img_arr, dtype=np.float32)
-                self.img_arr = cv2.resize(img_arr, (resize,resize), interpolation=cv2.INTER_NEAREST)
-                self.img_fn = selectedLayer_name
-        
-        scale_row = self.lightImage.nrow/resize
-        scale_col = self.lightImage.ncol/resize
+        if self.resize is None:
+            resize_height = self.lightImage.nrow
+            resize_width = self.lightImage.ncol
+            
+        self.img_arr = cv2.resize(img_arr, (resize_height,resize_width), interpolation=cv2.INTER_NEAREST)
+        self.img_fn = selectedLayer_name
+
+        scale_row = self.lightImage.nrow/resize_height
+        scale_col = self.lightImage.ncol/resize_width
         
         img_arr_resize_rgb = self.img_arr[:,:,::-1]
         temp_img_fn = f'{self.plugin_dir}/temp.jpg'
@@ -346,9 +362,10 @@ class seg2shp:
                 masks.append({'segmentation':mask[0,:,:]})
                 
             else:
+                
                 mask_generator = SamAutomaticMaskGenerator(
                 model=self.sam,
-                points_per_side=32,
+                points_per_side=self.dlg.doubleSpinBox_points_per_side.value(),
                 pred_iou_thresh=self.dlg.doubleSpinBox_iou_thr.value(),
                 stability_score_thresh=self.dlg.doubleSpinBox_pred_score_thr.value(),
                 crop_n_layers=1,
@@ -425,7 +442,6 @@ class seg2shp:
         
         # self.dlg.hide()
         self._reload_layer()
-        
     
     def _reload_layer(self):
         parcel_fn = self.dlg.lineEdit_output_layer.text()
@@ -437,9 +453,9 @@ class seg2shp:
         else:
             QgsProject.instance().addMapLayer(parcel_layer)
         
-        r=np.random.randint(0,255)
-        g=np.random.randint(0,255)
-        b=np.random.randint(0,255)
+        r=np.random.randint(128,255)
+        g=np.random.randint(128,255)
+        b=np.random.randint(128,255)
         color = f'{r},{g},{b}'
         symbol = QgsFillSymbol.createSimple({'width_border':'0.5', 'style':'b_diagonal', 'line_color':color, 'color':color})
         renderer = QgsSingleSymbolRenderer(symbol)
@@ -461,6 +477,8 @@ class seg2shp:
         
     def draw_point(self):
         # define a point tool
+        self.dlg.pushButton_automatic.setChecked(False)
+        self.dlg.pushButton_draw_box.setChecked(False)
         self.dlg.hide()
         self.point_tool = PointTool(self.dlg, self.iface.mapCanvas())
         self.iface.mapCanvas().setMapTool(self.point_tool)
@@ -469,6 +487,8 @@ class seg2shp:
 
     def draw_box(self):
         #define box tool
+        self.dlg.pushButton_automatic.setChecked(False)
+        self.dlg.pushButton_draw_point.setChecked(False)
         self.dlg.hide()
         self.box_tool = BoxTool(self.dlg, self.iface.mapCanvas())
         self.iface.mapCanvas().setMapTool(self.box_tool)
@@ -476,6 +496,8 @@ class seg2shp:
         
     def automatic(self):
         self.dlg.lineEdit_coords.setText('')
+        self.dlg.pushButton_draw_box.setChecked(False)
+        self.dlg.pushButton_draw_point.setChecked(False)
         
     def set_fast_sam_groupBox(self):
         try:
@@ -485,11 +507,42 @@ class seg2shp:
         except:
             self.dlg.groupBox_fast_sam.setChecked(False)
             QMessageBox.warning(None, "Warning", "FastSAM is not available!")
-            
+    
     def set_sam_groupBox(self):
         self.dlg.groupBox_sam.setChecked(True)
         self.dlg.groupBox_fast_sam.setChecked(False)
-    
+        
+    def resize_256(self):
+        self.resize = 256
+        self.dlg.pushButton_resize_512.setChecked(False)
+        self.dlg.pushButton_resize_1024.setChecked(False)
+            
+    def resize_512(self):
+        self.resize = 512
+        self.dlg.pushButton_resize_256.setChecked(False)
+        self.dlg.pushButton_resize_1024.setChecked(False)
+            
+    def resize_1024(self):
+        self.resize = 1024
+        self.dlg.pushButton_resize_256.setChecked(False)
+        self.dlg.pushButton_resize_512.setChecked(False)
+        
+    def get_resize(self):
+        
+        if self.dlg.pushButton_resize_256.isChecked():
+            self.resize=256
+            return True
+        elif self.dlg.pushButton_resize_512.isChecked():
+            self.resize=512
+            return True
+        elif self.dlg.pushButton_resize_1024.isChecked():
+            self.resize=1024
+            return True
+        else:
+            self.resize=None
+            return False
+            
+               
     def run(self):
         """Run method that performs all the real work"""
 
@@ -498,6 +551,11 @@ class seg2shp:
         if self.first_start == True:
             self.first_start = False
             self.dlg = seg2shpDialog()
+            
+            # image resize
+            self.dlg.pushButton_resize_256.clicked.connect(self.resize_256)
+            self.dlg.pushButton_resize_512.clicked.connect(self.resize_512)
+            self.dlg.pushButton_resize_1024.clicked.connect(self.resize_1024)
 
             # prompt processing
             self.dlg.pushButton_automatic.clicked.connect(self.automatic)
@@ -517,13 +575,6 @@ class seg2shp:
             self.img_arr = None
             self.img_fn = None
             self.model = None
-            
-            if cuda.is_available():
-                self.device = 'cuda'
-            # elif mps.is_available():
-            #     self.device = 'mps'
-            else:
-                self.device = 'cpu'
 
         # show the dialog
         self.dlg.show()
