@@ -76,8 +76,7 @@ SAM dependencies
 ```
 (Optional) Fast SAM dependencies
 ```bash
-./pip3 install -r {plugin_directory}/FastSAM/requirements.
-txt 
+./pip3 install -r {plugin_directory}/FastSAM/requirements.txt 
 ```
 ```bash
 ./pip3 install git+https://github.com/openai/CLIP.git
@@ -100,8 +99,7 @@ pip3 install segment-anything torch torchvision opencv-python==3.4.18.65
 
 (Optional) Fast SAM dependencies
 ```bash
-pip3 install -r {plugin_directory}/FastSAM/requirements.
-txt 
+pip3 install -r {plugin_directory}/FastSAM/requirements.txt 
 ```
 ```bash
 pip3 install git+https://github.com/openai/CLIP.git
