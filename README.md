@@ -113,7 +113,7 @@ pip3 install git+https://github.com/openai/CLIP.git
 ``` Plugins -> Manage and Install Plugins.. -> Check 'segment-agricultural-parcel' checkbox ```
 
 
-![activate_sap](activate.png)
+![activate_sap](figure/activate.png)
 
 
 
@@ -121,14 +121,18 @@ pip3 install git+https://github.com/openai/CLIP.git
 # How to Run
 
 <p align="center">
-    <img src="gui.png" width="500"/>
+    <img src="figure/gui1.png" width="300"/>
+    <img src="figure/gui2.png" width="300"/>
+    <img src="figure/gui3.png" width="300"/>
 </p>
+
 
 ## Automatic Mask Generator
 1. Select input layer.
-2. Click ```Automatic``` box.
-3. Check the segmentation model ```SAM``` or ```Fast SAM``` (if available).
-4. Set model parameters.
+2. Select image resize mode.
+3. Click ```Automatic``` box.
+4. Check the segmentation model ```SAM``` or ```Fast SAM``` (if available).
+5. Set model parameters.
     - ```IoU threshold```: Lower value tends to give larger masks.
     - ```Prediction score threshold```: Higher value gives more strict results.
     - ```Confidence score```: Similar to prediction score.
@@ -136,6 +140,9 @@ pip3 install git+https://github.com/openai/CLIP.git
     - ```Minimum and maximum object size```: The range of the output polygons' area should lie in. The unit is an area which follows the input layer's unit.
 6. Enter the output file name and directory.
 
+<p align="center">
+    <img src="figure/03_run_automatic.gif" width="500"/>
+</p>
 
 
 ## Segmentation Using Prompts
@@ -148,9 +155,19 @@ pip3 install git+https://github.com/openai/CLIP.git
 6. Set polygonization parameters.
 7. Enter the output file name and directory.
 
+<p align="center">
+    <img src="figure/04_run_point.gif" width="500"/>
+</p>
 
+<p align="center">
+    <img src="figure/05_run_box.gif" width="500"/>
+</p>
 
 # Issues
 - FastSAM is only supported by Windows and MacOS.
 - Apple's Metal Performance Shaders (mps) is not supported by SAM.
 - CUDA and CPU are suppported.
+
+
+# Acknowledgements
+This repository is a collaborative effort involving the World Bank, PULSE (Punjab Urban Land Systems Enhancement), and Purdue University. We extend our gratitude to all the contributors and partners for their invaluable support and contributions to this project.
