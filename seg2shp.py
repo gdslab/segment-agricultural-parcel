@@ -44,7 +44,8 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry, SamP
 from shapely.geometry import Polygon as sPolygon
 from torch import cuda
 from torch.backends import mps
-import cv2
+# import cv2
+from PIL import Image
 import time
 
 
@@ -287,16 +288,18 @@ class seg2shp:
             resize_height = self.lightImage.nrow
             resize_width = self.lightImage.ncol
             
-        self.img_arr = cv2.resize(img_arr, (resize_height,resize_width), interpolation=cv2.INTER_NEAREST)
+        # self.img_arr = cv2.resize(img_arr, (resize_height,resize_width), interpolation=cv2.INTER_NEAREST)
+        self.img_arr = np.array(Image.fromarray(img_arr).resize((resize_height,resize_width)))
         self.img_fn = selectedLayer_name
 
         scale_row = self.lightImage.nrow/resize_height
         scale_col = self.lightImage.ncol/resize_width
         
-        img_arr_resize_rgb = self.img_arr[:,:,::-1]
+        img_resize_rgb = Image.fromarray(self.img_arr)
         temp_img_fn = f'{self.plugin_dir}/temp.jpg'
         
-        cv2.imwrite(temp_img_fn, img_arr_resize_rgb)
+        img_resize_rgb.save(temp_img_fn)
+        # cv2.imwrite(temp_img_fn, img_arr_resize_rgb)
         # del img_arr
     
         print("Image shape:")
