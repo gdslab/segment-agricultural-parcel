@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>613</width>
-    <height>484</height>
+    <height>544</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -32,8 +32,8 @@
     <widget class="QPushButton" name="pushButton_resize_512">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>120</y>
+       <x>202</x>
+       <y>130</y>
        <width>175</width>
        <height>30</height>
       </rect>
@@ -48,8 +48,8 @@
     <widget class="QPushButton" name="pushButton_resize_256">
      <property name="geometry">
       <rect>
-       <x>18</x>
-       <y>120</y>
+       <x>20</x>
+       <y>130</y>
        <width>175</width>
        <height>30</height>
       </rect>
@@ -70,8 +70,8 @@
     <widget class="QCheckBox" name="checkBox_update_layer">
      <property name="geometry">
       <rect>
-       <x>192</x>
-       <y>170</y>
+       <x>190</x>
+       <y>200</y>
        <width>141</width>
        <height>20</height>
       </rect>
@@ -83,8 +83,8 @@
     <widget class="QPushButton" name="pushButton_resize_1024">
      <property name="geometry">
       <rect>
-       <x>382</x>
-       <y>120</y>
+       <x>384</x>
+       <y>130</y>
        <width>175</width>
        <height>30</height>
       </rect>
@@ -147,8 +147,8 @@
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
-       <x>22</x>
-       <y>200</y>
+       <x>20</x>
+       <y>230</y>
        <width>541</width>
        <height>32</height>
       </rect>
@@ -198,8 +198,8 @@
     <widget class="QLineEdit" name="lineEdit_coords">
      <property name="geometry">
       <rect>
-       <x>22</x>
-       <y>240</y>
+       <x>20</x>
+       <y>270</y>
        <width>541</width>
        <height>29</height>
       </rect>
@@ -208,8 +208,8 @@
     <widget class="QLabel" name="label_13">
      <property name="geometry">
       <rect>
-       <x>22</x>
-       <y>90</y>
+       <x>24</x>
+       <y>100</y>
        <width>171</width>
        <height>20</height>
       </rect>
@@ -221,8 +221,8 @@
     <widget class="QLabel" name="label_5">
      <property name="geometry">
       <rect>
-       <x>22</x>
-       <y>170</y>
+       <x>20</x>
+       <y>200</y>
        <width>171</width>
        <height>20</height>
       </rect>
@@ -235,7 +235,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>310</y>
+       <y>350</y>
        <width>541</width>
        <height>31</height>
       </rect>
@@ -257,7 +257,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>290</y>
+       <y>330</y>
        <width>111</width>
        <height>16</height>
       </rect>
@@ -265,35 +265,6 @@
      <property name="text">
       <string>Ouput Layer</string>
      </property>
-    </widget>
-    <widget class="QWidget" name="layoutWidget">
-     <property name="geometry">
-      <rect>
-       <x>300</x>
-       <y>370</y>
-       <width>264</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_4">
-      <item>
-       <widget class="QPushButton" name="pushButton_run">
-        <property name="text">
-         <string>Run</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDialogButtonBox" name="button_box">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="standardButtons">
-         <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
@@ -491,7 +462,7 @@
        <x>20</x>
        <y>20</y>
        <width>541</width>
-       <height>241</height>
+       <height>291</height>
       </rect>
      </property>
      <property name="title">
@@ -590,8 +561,73 @@
        <number>10</number>
       </property>
      </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>230</y>
+        <width>501</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Poly mode</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_convex">
+         <property name="text">
+          <string>Convex</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="radioButton_concave">
+         <property name="text">
+          <string>Concave</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </widget>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>490</y>
+     <width>264</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <item>
+     <widget class="QPushButton" name="pushButton_run">
+      <property name="text">
+       <string>Run</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDialogButtonBox" name="button_box">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <customwidgets>

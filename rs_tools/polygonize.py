@@ -1,11 +1,11 @@
 #!/bin/python
 
-import cv2
 import numpy as np
 from shapely.geometry import Polygon as sPolygon
 from matplotlib.patches import Polygon as mPolygon
 import fiona
 from osgeo import ogr
+from skimage.measure import find_contours,label
 
 
 def load_polygons(fn:str)->list:
@@ -46,7 +46,7 @@ def plot_patch_image(ax, raster=None, contours=None):
 
         
         
-def polygonize(mask, min_obj, simplify_tolerance=None):
+def polygonize(mask, convex=None, simplify_tolerance=None):
     
     '''
     masks takes input as the binary mask image.
@@ -58,21 +58,21 @@ def polygonize(mask, min_obj, simplify_tolerance=None):
     else:
         polygon_raster = mask
     
-    # Find contours in the binary image
-    contours, _ = cv2.findContours(polygon_raster, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Convert contours to polygons
-    polygons = []
-    for contour in contours:
-        contour_ = np.squeeze(contour)
-        if np.shape(contour_)[0] > 3:
-            polygon = sPolygon(contour_)
+    labels = label(polygon_raster)
+    
+    polygons=[]
+    for lab in range(1,labels.max()+1):
+        # Find contours in the binary image
+        contours = find_contours(labels==lab)
+        for con in contours:
+            polygon = sPolygon(con[:,[1,0]])
             if simplify_tolerance is not None:
                 polygon = polygon.simplify(tolerance=simplify_tolerance)
-            if polygon.area > min_obj:
+            if convex:
+                polygons.append(polygon.convex_hull)
+            else:
                 polygons.append(polygon)
 
-               
     return polygons
 
 

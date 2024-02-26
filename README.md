@@ -72,7 +72,7 @@ cd /Applications/QGIS.app/Contents/MacOS/bin
 ### Install Library Dependencies
 SAM dependencies
 ```bash
-./pip3 install segment-anything torch torchvision
+./pip3 install segment-anything torch torchvision scikit-image
 ```
 (Optional) Fast SAM dependencies
 ```bash
@@ -94,7 +94,7 @@ OsGeo4W Sheel can be found on ```Start -> All Programs -> OSGeo4W ```
 ### Install Library Dependencies
 SAM dependencies
 ```PowerShell
-pip3 install segment-anything torch torchvision
+pip3 install segment-anything torch torchvision scikit-image
 ```
 
 (Optional) Fast SAM dependencies

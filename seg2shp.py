@@ -44,7 +44,6 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry, SamP
 from shapely.geometry import Polygon as sPolygon
 from torch import cuda
 from torch.backends import mps
-# import cv2
 from PIL import Image
 import time
 
@@ -422,7 +421,8 @@ class seg2shp:
         for mask in masks:
             # mask = cv2.morphologyEx(np.array(mask['segmentation'], dtype=np.uint8), cv2.MORPH_OPEN, kernel)
             mask_ = mask['segmentation']
-            polygons = polygonize(mask_, min_obj, simplify_tolerance=self.dlg.doubleSpinBox_simplify_tolerance.value())
+            convex = self.dlg.radioButton_convex.isChecked()
+            polygons = polygonize(mask_, convex=convex, simplify_tolerance=self.dlg.doubleSpinBox_simplify_tolerance.value())
             for polygon_ in polygons:
                 xy = np.array(polygon_.exterior.xy).transpose() * np.array([scale_col, scale_row])
                 x = xy[:,0]
